@@ -1,82 +1,156 @@
-import React from 'react';
-import { Menu, Moon, Sun, Globe } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Menu, Globe, Maximize, Crop, RefreshCw, Download, Trash2, X, ChevronRight, Minimize2, FileOutput, ArrowRightLeft } from 'lucide-react';
 import { Logo } from './Logo';
-import { NAV_MENU } from '../constants';
 import { useLanguage } from '../translations';
+import { ToolType } from '../types';
 
 interface Props {
   onOpenLang: () => void;
-  onToggleTheme: () => void;
-  theme: 'light' | 'dark';
-  onNavigate: (view: 'home' | 'tool', toolId?: string) => void;
-  onToggleMenu: () => void;
+  onNavigate: (view: 'home' | 'tool' | 'about' | 'privacy' | 'terms', toolId?: string) => void;
+  onResetImage: () => void;
+  onClearCanvas: () => void;
+  onDownload: () => void;
+  canDownload: boolean;
+  imageLoaded: boolean;
 }
 
-export const Navbar: React.FC<Props> = ({ onOpenLang, onToggleTheme, theme, onNavigate, onToggleMenu }) => {
+export const Navbar: React.FC<Props> = ({ 
+  onOpenLang, 
+  onNavigate,
+  onResetImage, 
+  onClearCanvas,
+  onDownload,
+  canDownload,
+  imageLoaded
+}) => {
   const { t } = useLanguage();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMenuOpen]);
+
+  const handleAction = (action: () => void) => {
+    action();
+    setIsMenuOpen(false);
+  };
+
+  const menuTools = [
+    { id: 'image_resizer' as ToolType, icon: Maximize, label: 'tool.image_resizer', color: 'text-blue-500' },
+    { id: 'crop_image' as ToolType, icon: Crop, label: 'tool.crop_image', color: 'text-green-500' },
+    { id: 'rotate_image' as ToolType, icon: RefreshCw, label: 'tool.rotate_image', color: 'text-orange-500' },
+    { id: 'flip_image' as ToolType, icon: ArrowRightLeft, label: 'tool.flip_image', color: 'text-purple-500' },
+    { id: 'image_compressor' as ToolType, icon: Minimize2, label: 'tool.image_compressor', color: 'text-red-500' },
+    { id: 'image_converter' as ToolType, icon: FileOutput, label: 'tool.image_converter', color: 'text-indigo-500' },
+  ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+    <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-200 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
+        {/* Brand */}
         <div 
-          className="flex items-center gap-2 cursor-pointer" 
+          className="flex items-center gap-2 cursor-pointer group" 
           onClick={() => onNavigate('home')}
         >
-          <Logo className="w-8 h-8 md:w-10 md:h-10" />
-          <span className="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+          <Logo className="w-8 h-8 md:w-10 md:h-10 group-hover:rotate-12 transition-transform" />
+          <span className="text-lg md:text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
             {t('brand.name')}
           </span>
         </div>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6">
-          {NAV_MENU.map((item, idx) => (
-            <div key={idx} className="relative group">
-              <button className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2">
-                {t(item.labelKey)}
-              </button>
-              {item.items && (
-                <div className="absolute top-full left-0 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform translate-y-2 group-hover:translate-y-0">
-                  <div className="py-2">
-                    {item.items.map((subItem, sIdx) => (
-                      <button
-                        key={sIdx}
-                        onClick={() => onNavigate('tool', subItem.toolId)}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-                      >
-                        {t(subItem.labelKey)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-3">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1 md:gap-3">
           <button 
             onClick={onOpenLang}
-            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
+            title="Language"
           >
             <Globe className="w-5 h-5" />
           </button>
-          
-          <button 
-            onClick={onToggleTheme}
-            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-          
-          <button 
-            className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            onClick={onToggleMenu}
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+
+          {/* Hamburger Menu Trigger */}
+          <div className="relative" ref={menuRef}>
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={`p-2 rounded-xl transition-all ${isMenuOpen ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:bg-gray-100'}`}
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+
+            {/* Full Feature Dropdown Menu */}
+            {isMenuOpen && (
+              <div className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-fade-in-up origin-top-right">
+                <div className="p-3 space-y-1">
+                  <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    Image Tools
+                  </div>
+                  
+                  {menuTools.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleAction(() => onNavigate('tool', item.id))}
+                      className="w-full flex items-center justify-between px-3 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-xl transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon className={`w-5 h-5 ${item.color}`} />
+                        {t(item.label)}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-300" />
+                    </button>
+                  ))}
+
+                  <div className="my-2 border-t border-gray-100"></div>
+                  
+                  <div className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    Current Image
+                  </div>
+
+                  <button 
+                    disabled={!imageLoaded}
+                    onClick={() => handleAction(onDownload)}
+                    className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-50 rounded-xl transition-all"
+                  >
+                    <Download className="w-5 h-5" />
+                    {t('editor.download')}
+                  </button>
+
+                  <button 
+                    disabled={!imageLoaded}
+                    onClick={() => handleAction(onResetImage)}
+                    className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 rounded-xl transition-all"
+                  >
+                    <RefreshCw className="w-5 h-5 text-gray-400" />
+                    Reset Edits
+                  </button>
+
+                  <button 
+                    disabled={!imageLoaded}
+                    onClick={() => handleAction(onClearCanvas)}
+                    className="w-full flex items-center gap-3 px-3 py-3 text-sm font-bold text-red-500 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-50 rounded-xl transition-all"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                    Clear Canvas
+                  </button>
+                </div>
+                
+                <div className="bg-gray-50 p-3 flex justify-around">
+                   <button onClick={() => handleAction(() => onNavigate('about'))} className="text-[10px] font-bold text-gray-400 hover:text-blue-500">About</button>
+                   <button onClick={() => handleAction(() => onNavigate('privacy'))} className="text-[10px] font-bold text-gray-400 hover:text-blue-500">Privacy</button>
+                   <button onClick={() => handleAction(() => onNavigate('terms'))} className="text-[10px] font-bold text-gray-400 hover:text-blue-500">Terms</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>
