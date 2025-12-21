@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Download, Sliders, RotateCw, MoveHorizontal, MoveVertical, Crop as CropIcon, X, AlertCircle, RefreshCw, Type, Maximize2, Minimize2 } from 'lucide-react';
-import { DEFAULT_CONFIG, SUPPORTED_FORMATS, FILE_SIZE_PRESETS } from '../constants';
+import { Upload, Download, Sliders, RotateCw, MoveHorizontal, MoveVertical, Crop as CropIcon, X, AlertCircle, RefreshCw, Type, Maximize2 } from 'lucide-react';
+import { DEFAULT_CONFIG, SUPPORTED_FORMATS } from '../constants';
 import { ImageFormat, ResizeConfig, ResizeUnit, ProcessedImage, HistoryItem, View, ToolType } from '../types';
 import { readFileAsDataURL, loadImage } from './imageUtils';
 import { useLanguage } from '../translations';

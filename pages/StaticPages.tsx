@@ -94,6 +94,6 @@ export const TermsPage = () => {
   );
 };
 
-export const ToolPage: React.FC<{ toolName: string; onHome: () => void }> = ({ toolName, onHome }) => {
+export const ToolPage: React.FC<{ toolName: string; onHome: () => void }> = ({ toolName: _toolName, onHome: _onHome }) => {
    return null;
 };

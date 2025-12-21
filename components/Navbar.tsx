@@ -20,7 +20,7 @@ export const Navbar: React.FC<Props> = ({
   onResetImage, 
   onClearCanvas,
   onDownload,
-  canDownload,
+  canDownload: _canDownload,
   imageLoaded
 }) => {
   const { t } = useLanguage();

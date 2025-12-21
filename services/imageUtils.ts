@@ -81,7 +81,7 @@ const getBlobFromCanvas = (
 export const processImage = async (
   originalImage: HTMLImageElement,
   config: ResizeConfig,
-  fileName: string
+  _fileName: string
 ): Promise<{ blob: Blob; width: number; height: number; url: string }> => {
   
   let targetWidth = config.width || originalImage.width;

@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { LANGUAGES } from './constants';
 
 type Dictionary = Record<string, string>;
 
