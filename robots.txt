@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://imageresizersaffaan.netlify.app/sitemap.xml
