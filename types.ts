@@ -26,10 +26,9 @@ export interface ResizeConfig {
   maintainAspectRatio: boolean;
   unit: ResizeUnit;
   format: ImageFormat;
-  quality: number; // 0-100
   backgroundColor: string;
   dpi: number;
-  targetFileSize: number | null; // bytes
+  targetFileSize: number | null; // KB
   rotation: number; // degrees
   flip: { horizontal: boolean; vertical: boolean };
   crop?: CropConfig;

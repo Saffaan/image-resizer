@@ -6,10 +6,9 @@ export const DEFAULT_CONFIG: ResizeConfig = {
   maintainAspectRatio: true,
   unit: ResizeUnit.PIXELS,
   format: ImageFormat.JPG,
-  quality: 90,
   backgroundColor: '#FFFFFF',
   dpi: 72,
-  targetFileSize: null,
+  targetFileSize: 100,
   rotation: 0,
   flip: { horizontal: false, vertical: false },
 };
@@ -61,9 +60,9 @@ export const NAV_MENU: NavItem[] = [
 ];
 
 export const FILE_SIZE_PRESETS = [
+  { label: '20 KB', value: 20 },
   { label: '50 KB', value: 50 },
   { label: '100 KB', value: 100 },
   { label: '200 KB', value: 200 },
   { label: '500 KB', value: 500 },
-  { label: '1 MB', value: 1024 },
 ];

@@ -1,3 +1,4 @@
+
 import { ResizeConfig, ImageFormat, ResizeUnit } from '../types';
 
 export const readFileAsDataURL = (file: File): Promise<string> => {
@@ -17,6 +18,48 @@ export const loadImage = (src: string): Promise<HTMLImageElement> => {
     img.onerror = reject;
     img.src = src;
   });
+};
+
+/**
+ * High-quality image drawing with step-down resampling.
+ * Prevents aliasing and blurriness when downscaling significantly.
+ */
+const drawImageStepDown = (
+    ctx: CanvasRenderingContext2D,
+    img: HTMLImageElement | HTMLCanvasElement,
+    sx: number, sy: number, sw: number, sh: number,
+    dx: number, dy: number, dw: number, dh: number
+) => {
+    let curW = sw;
+    let curH = sh;
+    let curImg: HTMLImageElement | HTMLCanvasElement = img as HTMLImageElement;
+
+    // Set smoothing quality for the final draw
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // Step down by half until we are close to the target size
+    while (curW > dw * 2) {
+        const nextW = Math.floor(curW * 0.5);
+        const nextH = Math.floor(curH * 0.5);
+        
+        const tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = nextW;
+        tmpCanvas.height = nextH;
+        const tmpCtx = tmpCanvas.getContext('2d');
+        if (tmpCtx) {
+            tmpCtx.imageSmoothingEnabled = true;
+            tmpCtx.imageSmoothingQuality = 'high';
+            tmpCtx.drawImage(curImg, 0, 0, curW, curH, 0, 0, nextW, nextH);
+            curImg = tmpCanvas;
+            curW = nextW;
+            curH = nextH;
+        } else {
+            break;
+        }
+    }
+
+    ctx.drawImage(curImg, 0, 0, curW, curH, dx, dy, dw, dh);
 };
 
 const getBlobFromCanvas = (
@@ -61,16 +104,17 @@ const getBlobFromCanvas = (
         }
 
         // Draw centered relative to the canvas mid-point
-        // Note: drawWidth/Height represent the visual size of the image on the canvas
-        // If we rotated 90/270, the "width" of the image occupies the "height" of the canvas and vice versa
         const dw = isRotatedSides ? targetH : targetW;
         const dh = isRotatedSides ? targetW : targetH;
 
-        ctx.drawImage(
+        // Use high-quality step-down drawing
+        drawImageStepDown(
+            ctx, 
             originalImage, 
             sX, sY, sW, sH,
             -dw / 2, -dh / 2, dw, dh
         );
+        
         ctx.restore();
 
         const exportFormat = config.format === ImageFormat.SVG ? 'image/png' : config.format;
@@ -102,17 +146,19 @@ export const processImage = async (
   let finalCanvasHeight = isRotatedSides ? targetWidth : targetHeight;
 
   let resultBlob: Blob | null = null;
+  const defaultQuality = 0.92; // Slightly higher default for JPG/WebP clarity
   
   if (config.targetFileSize && config.targetFileSize > 0) {
       const targetBytes = config.targetFileSize * 1024;
       const canAdjustQuality = config.format === ImageFormat.JPG || config.format === ImageFormat.WEBP;
       
-      let low = 0.05;
+      let low = 0.1; // Don't go below 0.1 to avoid complete garbage
       let high = 1.0;
       let bestBlob: Blob | null = null;
 
       if (canAdjustQuality) {
-        for (let i = 0; i < 10; i++) {
+        // Precise binary search (12 iterations) for highest quality that fits KB limit
+        for (let i = 0; i < 12; i++) {
             const mid = (low + high) / 2;
             const blob = await getBlobFromCanvas(originalImage, config, finalCanvasWidth, finalCanvasHeight, mid);
             if (blob) {
@@ -127,25 +173,29 @@ export const processImage = async (
       }
 
       if (!bestBlob) {
-          // If quality adjustment isn't enough or possible, scale down
+          // If quality adjustment isn't enough (or PNG), scale dimensions gradually
           let scale = 1.0;
-          while (scale > 0.1) {
+          while (scale > 0.05) {
              const w = Math.round(finalCanvasWidth * scale);
              const h = Math.round(finalCanvasHeight * scale);
-             const blob = await getBlobFromCanvas(originalImage, config, w, h, 0.7);
+             const blob = await getBlobFromCanvas(originalImage, config, w, h, defaultQuality);
              if (blob && blob.size <= targetBytes) {
                  resultBlob = blob;
                  finalCanvasWidth = w;
                  finalCanvasHeight = h;
                  break;
              }
-             scale -= 0.1;
+             scale -= 0.05; // Finer scaling steps for better fidelity
+          }
+          if (!resultBlob) {
+            // Absolute fallback: minimal scale + lower quality
+            resultBlob = await getBlobFromCanvas(originalImage, config, Math.round(finalCanvasWidth * 0.05), Math.round(finalCanvasHeight * 0.05), 0.7);
           }
       } else {
           resultBlob = bestBlob;
       }
   } else {
-      resultBlob = await getBlobFromCanvas(originalImage, config, finalCanvasWidth, finalCanvasHeight, config.quality / 100);
+      resultBlob = await getBlobFromCanvas(originalImage, config, finalCanvasWidth, finalCanvasHeight, defaultQuality);
   }
 
   if (!resultBlob) throw new Error('Image processing failed');

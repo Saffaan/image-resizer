@@ -50,8 +50,9 @@ export const LivePreview: React.FC<Props> = ({ file, originalImage, config, onRe
       }
     };
 
-    // Debounce processing
-    timeout = setTimeout(runProcessing, 500);
+    // Debounce processing - shortened to 150ms for snappier "live" feel
+    // while still preventing heavy processing on every micro-keystroke (for width/height)
+    timeout = setTimeout(runProcessing, 150);
 
     return () => {
       mounted = false;
@@ -60,15 +61,18 @@ export const LivePreview: React.FC<Props> = ({ file, originalImage, config, onRe
   }, [file, originalImage, config]);
 
   return (
-    <div className="bg-gray-100 rounded-xl overflow-hidden min-h-[400px] flex flex-col relative border border-gray-200">
-      <div className="absolute top-4 left-4 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm z-10">
-        Preview
+    <div className="bg-gray-100 rounded-xl overflow-hidden min-h-[400px] h-[500px] flex flex-col relative border border-gray-200 shadow-inner">
+      <div className="absolute top-4 left-4 bg-black/60 text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded backdrop-blur-md z-10 border border-white/10">
+        Live Preview
       </div>
       
-      <div className="flex-1 flex items-center justify-center p-8 bg-[url('https://bg-patterns.netlify.app/bg-patterns/subtle-dots.png')] bg-repeat">
+      <div className="flex-1 flex items-center justify-center p-8 bg-[url('https://bg-patterns.netlify.app/bg-patterns/subtle-dots.png')] bg-repeat overflow-hidden">
         {isProcessing && (
-          <div className="absolute inset-0 bg-white/50 z-20 flex items-center justify-center backdrop-blur-sm">
-            <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
+          <div className="absolute inset-0 bg-white/40 z-20 flex items-center justify-center backdrop-blur-[1px] transition-all duration-300">
+            <div className="flex flex-col items-center gap-3">
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent shadow-lg"></div>
+              <span className="text-[10px] font-black text-blue-600 uppercase tracking-tighter bg-white/80 px-2 py-0.5 rounded shadow-sm">Optimizing...</span>
+            </div>
           </div>
         )}
         
@@ -76,22 +80,22 @@ export const LivePreview: React.FC<Props> = ({ file, originalImage, config, onRe
           <img 
             src={previewUrl} 
             alt="Preview" 
-            className="max-w-full max-h-[500px] object-contain shadow-2xl rounded-lg transition-all"
+            className="max-w-full max-h-full object-contain shadow-2xl rounded-lg transition-transform duration-300 ease-out"
             style={{ 
-               // Rotation is baked into the blob
+               // Rotation is baked into the blob by processImage
             }}
           />
         ) : (
-           <div className="text-gray-400">Loading...</div>
+           <div className="text-gray-400 font-medium animate-pulse">Initializing Canvas...</div>
         )}
       </div>
       
-      <div className="bg-white p-4 border-t border-gray-200 flex justify-between items-center text-sm">
+      <div className="bg-white p-4 border-t border-gray-200 flex justify-between items-center text-xs">
         <div className="text-gray-600">
-           <span className="font-semibold">Output:</span> {stats.width} x {stats.height} px
+           <span className="font-bold text-gray-400 uppercase mr-1">Output:</span> <span className="text-gray-900 font-mono">{stats.width} × {stats.height}</span> <span className="text-gray-400 font-mono">px</span>
         </div>
         <div className="text-gray-600">
-           <span className="font-semibold">Est. Size:</span> {(stats.size / 1024).toFixed(1)} KB
+           <span className="font-bold text-gray-400 uppercase mr-1">Estimated Size:</span> <span className="text-blue-600 font-bold font-mono">{(stats.size / 1024).toFixed(1)}</span> <span className="text-gray-400 font-mono">KB</span>
         </div>
       </div>
     </div>
