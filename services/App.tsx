@@ -22,7 +22,7 @@ import { HowToGuide } from '../components/HowToGuide';
  * Now synchronized with external value changes (e.g., from presets).
  */
 const TargetSizeInput = React.memo(({ initialValue, onConfirm }: { initialValue: number | null, onConfirm: (val: number | null) => void }) => {
-  const { t } = useLanguage();
+useLanguage();
   const [val, setVal] = useState(initialValue?.toString() || '');
   
   useEffect(() => {
