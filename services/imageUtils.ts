@@ -1,4 +1,3 @@
-
 import { ResizeConfig, ImageFormat, ResizeUnit } from '../types';
 
 export const readFileAsDataURL = (file: File): Promise<string> => {
@@ -27,12 +26,14 @@ export const loadImage = (src: string): Promise<HTMLImageElement> => {
 const drawImageStepDown = (
     ctx: CanvasRenderingContext2D,
     img: HTMLImageElement | HTMLCanvasElement,
-    sx: number, sy: number, sw: number, sh: number,
+    _sx: number, _sy: number, sw: number, sh: number,
     dx: number, dy: number, dw: number, dh: number
 ) => {
     let curW = sw;
     let curH = sh;
     let curImg: HTMLImageElement | HTMLCanvasElement = img as HTMLImageElement;
+    let curX = _sx;
+    let curY = _sy;
 
     // Set smoothing quality for the final draw
     ctx.imageSmoothingEnabled = true;
@@ -50,16 +51,19 @@ const drawImageStepDown = (
         if (tmpCtx) {
             tmpCtx.imageSmoothingEnabled = true;
             tmpCtx.imageSmoothingQuality = 'high';
-            tmpCtx.drawImage(curImg, 0, 0, curW, curH, 0, 0, nextW, nextH);
+            // Use curX/curY only on the very first step
+            tmpCtx.drawImage(curImg, curX, curY, curW, curH, 0, 0, nextW, nextH);
             curImg = tmpCanvas;
             curW = nextW;
             curH = nextH;
+            curX = 0;
+            curY = 0;
         } else {
             break;
         }
     }
 
-    ctx.drawImage(curImg, 0, 0, curW, curH, dx, dy, dw, dh);
+    ctx.drawImage(curImg, curX, curY, curW, curH, dx, dy, dw, dh);
 };
 
 const getBlobFromCanvas = (

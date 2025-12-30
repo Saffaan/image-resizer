@@ -21,7 +21,8 @@ import { HowToGuide } from '../components/HowToGuide';
  * Updates the global config ONLY on 'Confirm' click or 'Enter' key.
  * Now synchronized with external value changes (e.g., from presets).
  */
-const TargetSizeInput = React.memo(({ initialValue, onConfirm, t }: { initialValue: number | null, onConfirm: (val: number | null) => void, t: any }) => {
+const TargetSizeInput = React.memo(({ initialValue, onConfirm }: { initialValue: number | null, onConfirm: (val: number | null) => void }) => {
+  const { t } = useLanguage();
   const [val, setVal] = useState(initialValue?.toString() || '');
   
   useEffect(() => {
@@ -184,7 +185,6 @@ const ExportSection = React.memo(({ config, onConfigChange, t }: { config: Resiz
          <TargetSizeInput 
            initialValue={config.targetFileSize} 
            onConfirm={(val) => onConfigChange('targetFileSize', val)} 
-           t={t} 
          />
       </div>
   </div>
