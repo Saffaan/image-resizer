@@ -22,7 +22,7 @@ import { HowToGuide } from '../components/HowToGuide';
  * Now synchronized with external value changes (e.g., from presets).
  */
 const TargetSizeInput = React.memo(({ initialValue, onConfirm }: { initialValue: number | null, onConfirm: (val: number | null) => void }) => {
-useLanguage();
+  const { t } = useLanguage();
   const [val, setVal] = useState(initialValue?.toString() || '');
   
   useEffect(() => {
@@ -98,7 +98,7 @@ const ResizeSection = React.memo(({ config, onConfigChange, t }: { config: Resiz
   </div>
 ));
 
-const CropSection = React.memo(({ config, originalImage, setConfig, t }: { config: ResizeConfig, originalImage: HTMLImageElement, setConfig: React.Dispatch<React.SetStateAction<ResizeConfig>>, t: any }) => {
+const CropSection = React.memo(({ config, originalImage, setConfig }: { config: ResizeConfig, originalImage: HTMLImageElement, setConfig: React.Dispatch<React.SetStateAction<ResizeConfig>> }) => {
   if (!config.crop) return null;
   return (
     <div className="p-4 bg-gray-50 rounded-xl space-y-4">
@@ -153,42 +153,45 @@ const TransformSection = React.memo(({ config, onConfigChange, setConfig }: { co
   </div>
 ));
 
-const ExportSection = React.memo(({ config, onConfigChange, t }: { config: ResizeConfig, onConfigChange: (key: keyof ResizeConfig, val: any) => void, t: any }) => (
-  <div className="p-4 bg-gray-50 rounded-xl space-y-4">
-      <h4 className="text-sm font-bold flex items-center gap-2 text-gray-700">
-         <Type className="w-4 h-4" /> Export Options
-      </h4>
-      <div className="grid grid-cols-3 gap-1">
-          {[ImageFormat.JPG, ImageFormat.PNG, ImageFormat.WEBP].map(fmt => (
-            <button key={fmt} type="button" onClick={() => onConfigChange('format', fmt)} className={`py-1.5 text-xs rounded border transition-all ${config.format === fmt ? 'border-blue-500 bg-blue-50 text-blue-600 font-bold' : 'bg-white border-gray-200'}`}>
-                {fmt.split('/')[1].toUpperCase().replace('JPEG', 'JPG')}
-            </button>
-          ))}
-      </div>
-      <div>
-         <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block">{t('editor.target_size_label')}</label>
-         <div className="grid grid-cols-5 gap-1 mb-2">
-            {FILE_SIZE_PRESETS.map(preset => (
-              <button
-                key={preset.value}
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onConfigChange('targetFileSize', preset.value);
-                }}
-                className={`py-1.5 text-[10px] font-bold rounded border transition-all ${config.targetFileSize === preset.value ? 'border-blue-500 bg-blue-50 text-blue-600' : 'bg-white border-gray-200 hover:border-blue-300'}`}
-              >
-                {preset.label}
+const ExportSection = React.memo(({ config, onConfigChange }: { config: ResizeConfig, onConfigChange: (key: keyof ResizeConfig, val: any) => void }) => {
+  const { t } = useLanguage();
+  return (
+    <div className="p-4 bg-gray-50 rounded-xl space-y-4">
+        <h4 className="text-sm font-bold flex items-center gap-2 text-gray-700">
+           <Type className="w-4 h-4" /> Export Options
+        </h4>
+        <div className="grid grid-cols-3 gap-1">
+            {[ImageFormat.JPG, ImageFormat.PNG, ImageFormat.WEBP].map(fmt => (
+              <button key={fmt} type="button" onClick={() => onConfigChange('format', fmt)} className={`py-1.5 text-xs rounded border transition-all ${config.format === fmt ? 'border-blue-500 bg-blue-50 text-blue-600 font-bold' : 'bg-white border-gray-200'}`}>
+                  {fmt.split('/')[1].toUpperCase().replace('JPEG', 'JPG')}
               </button>
             ))}
-         </div>
-         <TargetSizeInput 
-           initialValue={config.targetFileSize} 
-           onConfirm={(val) => onConfigChange('targetFileSize', val)} 
-         />
-      </div>
-  </div>
-));
+        </div>
+        <div>
+           <label className="text-[10px] font-bold text-gray-400 uppercase mb-2 block">{t('editor.target_size_label')}</label>
+           <div className="grid grid-cols-5 gap-1 mb-2">
+              {FILE_SIZE_PRESETS.map(preset => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onConfigChange('targetFileSize', preset.value);
+                  }}
+                  className={`py-1.5 text-[10px] font-bold rounded border transition-all ${config.targetFileSize === preset.value ? 'border-blue-500 bg-blue-50 text-blue-600' : 'bg-white border-gray-200 hover:border-blue-300'}`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+           </div>
+           <TargetSizeInput 
+             initialValue={config.targetFileSize} 
+             onConfirm={(val) => onConfigChange('targetFileSize', val)} 
+           />
+        </div>
+    </div>
+  );
+});
 
 export function App() {
   const { t } = useLanguage();
@@ -347,9 +350,9 @@ export function App() {
                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-6">
                       <h3 className="font-bold text-xl text-gray-900 flex items-center gap-2"><Sliders className="w-5 h-5 text-blue-500" /> Toolbox Settings</h3>
                       <ResizeSection config={config} onConfigChange={handleConfigChange} t={t} />
-                      <CropSection config={config} originalImage={originalImage} setConfig={setConfig} t={t} />
+                      <CropSection config={config} originalImage={originalImage} setConfig={setConfig} />
                       <TransformSection config={config} onConfigChange={handleConfigChange} setConfig={setConfig} />
-                      <ExportSection config={config} onConfigChange={handleConfigChange} t={t} />
+                      <ExportSection config={config} onConfigChange={handleConfigChange} />
                       <button type="button" onClick={downloadImage} disabled={!processedResult} className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-2xl font-bold shadow-xl shadow-blue-600/20 transition-all flex items-center justify-center gap-3 text-lg"><Download className="w-6 h-6" /> Download Optimized</button>
                    </div>
                    {error && <div className="flex items-center gap-3 p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100"><AlertCircle className="w-5 h-5" /><span className="text-sm font-medium">{error}</span></div>}
